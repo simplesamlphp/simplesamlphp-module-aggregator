@@ -33,7 +33,7 @@ All of the global parameters can be overriden for each aggregator. Here is a lis
 * `reconstruct`: Whether simpleSAMLphp should regenerate the metadata XML (TRUE) or pass-through the input metadata XML (FALSE).
 
 * `RegistrationInfo`:   Allows to specify information about the registrar of this metadata. Please refer to the
-[MDRPI extension](./simplesamlphp-metadata-extensions-rpi) document for further information.
+[MDRPI extension](https://simplesamlphp.org/docs/stable/simplesamlphp-metadata-extensions-rpi) document for further information.
 
 * `set`: By default all SAML types are available, including: `array('saml20-idp-remote', 'saml20-sp-remote', 'shib13-idp-remote', 'shib13-sp-remote')`. This list can be reduced by specifying one of the following values:
 
