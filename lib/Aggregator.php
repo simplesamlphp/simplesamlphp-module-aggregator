@@ -99,7 +99,7 @@ class sspmod_aggregator_Aggregator {
 					if (isset($metadata['tags']) && 
 							count(array_intersect($this->excludeTags, $metadata['tags'])) > 0) {
 						
-						SimpleSAML_Logger::debug('Excluding entity ID [' . $entityId . '] becuase it is tagged with one of [' . 
+						\SimpleSAML\Logger::debug('Excluding entity ID [' . $entityId . '] becuase it is tagged with one of [' . 
 							var_export($this->excludeTags, TRUE) . ']');
 						continue;
 					} else {
