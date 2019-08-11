@@ -35,7 +35,7 @@ class Arp {
         $this->prefix = $prefix;
         $this->suffix = $suffix;
 
-        if (isset($attributemap)) {
+        if (!empty($attributemap)) {
             $this->loadAttributeMap($attributemap);
         }
     }

@@ -28,7 +28,9 @@ class Aggregator
 
     /**
      * Constructor for the Aggregator.
-     *
+     * @param \SimpleSAML\Configuration $gConfig
+     * @param \SimpleSAML\Configuration $aConfig
+     * @param string $id
      */
     public function __construct($gConfig, $aConfig, $id)
     {
@@ -104,8 +106,7 @@ class Aggregator
         try {
             $sources = \SimpleSAML\Metadata\MetaDataStorageSource::parseSources($sourcesDef);
         } catch (\Exception $e) {
-            throw new \Exception('Invalid aggregator source configuration for aggregator ' .
-                var_export($id, true) . ': ' . $e->getMessage());
+            throw new \Exception('Invalid aggregator source configuration for aggregator '.var_export($this->id, true).': '.$e->getMessage());
         }
 
         /* Find list of all available entities. */
@@ -216,7 +217,7 @@ class Aggregator
         $maxDuration = $this->getMaxDuration();
         $reconstruct = $this->getReconstruct();
 
-        $entitiesDescriptor = new SAML2_XML_md_EntitiesDescriptor();
+        $entitiesDescriptor = new \SAML2\XML\md\EntitiesDescriptor();
         $entitiesDescriptor->Name = $this->id;
         $entitiesDescriptor->validUntil = time() + $maxDuration;
 

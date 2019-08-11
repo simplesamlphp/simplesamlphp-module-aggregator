@@ -56,7 +56,7 @@ if (strpos($attributemap, '\\') !== false) {
     throw new \SimpleSAML\Error\BadRequest('Requested URL contained \'./\'.');
 }
 
-$arp = new \SimpleSAML\Moduleaggregator\Arp($md, $attributemap, $prefix, $suffix);
+$arp = new \SimpleSAML\Module\aggregator\Arp($md, $attributemap, $prefix, $suffix);
 
 $arpxml = $arp->getXML();
 

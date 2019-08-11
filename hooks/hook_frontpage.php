@@ -3,6 +3,7 @@
  * Hook to add the aggregator list to the frontpage.
  *
  * @param array &$links  The links on the frontpage, split into sections.
+ * @return void
  */
 function aggregator_hook_frontpage(&$links)
 {
