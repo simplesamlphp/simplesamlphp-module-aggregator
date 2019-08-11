@@ -4,14 +4,14 @@
  *
  * @param array &$links  The links on the frontpage, split into sections.
  */
-function aggregator_hook_frontpage(&$links) {
-	assert('is_array($links)');
-	assert('array_key_exists("links", $links)');
+function aggregator_hook_frontpage(&$links)
+{
+    assert(is_array($links));
+    assert(array_key_exists("links", $links));
 
-	$links['federation'][] = array(
-		'href' => \SimpleSAML\Module::getModuleURL('aggregator/'),
-		'text' => '{aggregator:aggregator:frontpage_link}',
-		);
-
+    $links['federation'][] = [
+        'href' => \SimpleSAML\Module::getModuleURL('aggregator/'),
+        'text' => '{aggregator:aggregator:frontpage_link}',
+    ];
 }
 
