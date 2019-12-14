@@ -42,7 +42,9 @@
 
         <!-- Ignore MissingFile -->
         <MissingFile>
-            <directory name="bin" />
+            <errorLevel type="suppress">
+                <directory name="bin" />
+            </errorLevel>
         </MissingFile>
     </issueHandlers>
 </psalm>
