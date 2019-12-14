@@ -35,8 +35,14 @@
         <!-- Ignore UnresolvableInclude -->
         <UnresolvableInclude>
             <errorLevel type="suppress">
+                <file name="lib/ARP.php" />
                 <file name="tests/bootstrap.php" />
             </errorLevel>
         </UnresolvableInclude>
+
+        <!-- Ignore MissingFile -->
+        <MissingFile>
+            <directory name="bin" />
+        </MissingFile>
     </issueHandlers>
 </psalm>
