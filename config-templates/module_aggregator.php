@@ -21,7 +21,7 @@ $config = [
         ]
     ],
 
-    'maxDuration' => 60*60*24*5, // Maximum 5 days duration on ValidUntil.
+    'maxDuration' => 60 * 60 * 24 * 5, // Maximum 5 days duration on ValidUntil.
 
     // If base64 encoded for entity is already cached in the entity, should we
     // reconstruct the XML or re-use.
@@ -39,4 +39,3 @@ $config = [
     /* Certificate which should be included in the signature. Should correspond to the private key. */
     'sign.certificate' => 'server.crt',
 ];
-

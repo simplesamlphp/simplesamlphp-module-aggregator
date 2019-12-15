@@ -6,7 +6,8 @@ namespace SimpleSAML\Module\aggregator;
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
  * @package simpleSAMLphp
  */
-class Arp {
+class Arp
+{
     /** @var array $metadata */
     private $metadata;
 
@@ -81,7 +82,7 @@ class Arp {
     {
         if (empty($this->attributes)) {
             return $this->surround($name);
-        } 
+        }
         if (array_key_exists($name, $this->attributes)) {
             return $this->surround($this->attributes[$name]);
         }
@@ -109,7 +110,7 @@ EOT;
             if (isset($metadata['saml20-sp-remote'])) {
                 #echo '<pre>'; print_r($metadata); exit;
                 $xml .= $this->getEntryXML($metadata['saml20-sp-remote']);
-             }		
+            }
         }
 
         $xml .= '</AttributeFilterPolicyGroup>';
@@ -124,10 +125,10 @@ EOT;
     private function getEntryXML($entry)
     {
         $entityid = $entry['entityid'];
-        return '<AttributeFilterPolicy id="'.
-            $entityid.'"><PolicyRequirementRule xsi:type="basic:AttributeRequesterString" value="'.
-            $entityid.'" />'.$this->getEntryXMLcontent($entry).'</AttributeFilterPolicy>';
-    }	
+        return '<AttributeFilterPolicy id="' .
+            $entityid . '"><PolicyRequirementRule xsi:type="basic:AttributeRequesterString" value="' .
+            $entityid . '" />' . $this->getEntryXMLcontent($entry) . '</AttributeFilterPolicy>';
+    }
 
 
     /**
@@ -143,7 +144,7 @@ EOT;
 
         $ret = '';
         foreach ($entry['attributes'] as $a) {
-            $ret .= '<AttributeRule attributeID="'.$this->getAttributeID($a).
+            $ret .= '<AttributeRule attributeID="' . $this->getAttributeID($a) .
                 '"><PermitValueRule xsi:type="basic:ANY" /></AttributeRule>';
         }
         return $ret;

@@ -47,7 +47,7 @@ if ($mimetype === 'text/plain') {
     \SimpleSAML\Utils\XML::formatDOMElement($xml);
 }
 
-$metadata = '<?xml version="1.0"?>'."\n".$xml->ownerDocument->saveXML($xml);
+$metadata = '<?xml version="1.0"?>' . "\n" . $xml->ownerDocument->saveXML($xml);
 
 header('Content-Type: ' . $mimetype);
 header('Content-Length: ' . strlen($metadata));

@@ -15,4 +15,3 @@ function aggregator_hook_frontpage(&$links)
         'text' => '{aggregator:aggregator:frontpage_link}',
     ];
 }
-

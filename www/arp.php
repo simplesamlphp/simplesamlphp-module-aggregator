@@ -15,8 +15,9 @@ if (!array_key_exists('id', $_GET)) {
     exit;
 }
 $id = $_GET['id'];
-if (!in_array($id, $aggregators->getOptions()))
+if (!in_array($id, $aggregators->getOptions())) {
     throw new \SimpleSAML\Error\NotFound('No aggregator with id ' . var_export($id, true) . ' found.');
+}
 
 $aConfig = $aggregators->getConfigItem($id);
 

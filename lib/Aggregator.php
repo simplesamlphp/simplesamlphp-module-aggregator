@@ -63,17 +63,20 @@ class Aggregator
             return;
         }
 
-        switch($set) {
-            case 'saml2' :
+        switch ($set) {
+            case 'saml2':
                 $this->sets = array_intersect($this->sets, ['saml20-idp-remote', 'saml20-sp-remote']);
                 break;
-            case 'shib13' :
+            case 'shib13':
                 $this->sets = array_intersect($this->sets, ['shib13-idp-remote', 'shib13-sp-remote']);
                 break;
-            case 'idp' :
-                $this->sets = array_intersect($this->sets, ['saml20-idp-remote', 'shib13-idp-remote', 'attributeauthority-remote']);
+            case 'idp':
+                $this->sets = array_intersect(
+                    $this->sets,
+                    ['saml20-idp-remote', 'shib13-idp-remote', 'attributeauthority-remote']
+                );
                 break;
-            case 'sp' :
+            case 'sp':
                 $this->sets = array_intersect($this->sets, ['saml20-sp-remote', 'shib13-sp-remote']);
                 break;
             default:
@@ -85,7 +88,7 @@ class Aggregator
 
     /**
      * Add tag to excelude when collecting source metadata.
-     * 
+     *
      * @param string|array $exclude  May be string or array identifying a tag to exclude.
      * @return void
      */
@@ -98,7 +101,7 @@ class Aggregator
     /**
      * Returns a list of entities with metadata
      * @return array
-     */ 
+     */
     public function getSources()
     {
         $sourcesDef = $this->aConfig->getArray('sources');
@@ -106,7 +109,10 @@ class Aggregator
         try {
             $sources = \SimpleSAML\Metadata\MetaDataStorageSource::parseSources($sourcesDef);
         } catch (\Exception $e) {
-            throw new \Exception('Invalid aggregator source configuration for aggregator '.var_export($this->id, true).': '.$e->getMessage());
+            throw new \Exception(
+                'Invalid aggregator source configuration for aggregator '
+                . var_export($this->id, true) . ': ' . $e->getMessage()
+            );
         }
 
         /* Find list of all available entities. */
@@ -118,13 +124,19 @@ class Aggregator
                     $metadata['entityid'] = $entityId;
                     $metadata['metadata-set'] = $set;
 
-                    if (isset($metadata['tags']) && 
-                            count(array_intersect($this->excludeTags, $metadata['tags'])) > 0) {
-                        \SimpleSAML\Logger::debug('Excluding entity ID [' . $entityId . '] becuase it is tagged with one of [' . 
-                            var_export($this->excludeTags, true) . ']');
+                    if (
+                        isset($metadata['tags']) &&
+                        (count(array_intersect($this->excludeTags, $metadata['tags'])) > 0)
+                    ) {
+                        \SimpleSAML\Logger::debug(
+                            'Excluding entity ID [' . $entityId
+                            . '] becuase it is tagged with one of [' . var_export($this->excludeTags, true) . ']'
+                        );
                         continue;
                     } else {
-                        #echo('<pre>'); print_r($metadata); exit;
+                        #echo('<pre>');
+                        print_r($metadata);
+                        exit;
                     }
                     if (!array_key_exists($entityId, $entities)) {
                         $entities[$entityId] = [];
@@ -177,7 +189,7 @@ class Aggregator
     {
         if ($this->aConfig->hasValue('sign.enable')) {
             return $this->aConfig->getBoolean('sign.enable');
-        } else if ($this->gConfig->hasValue('sign.enable')) {
+        } elseif ($this->gConfig->hasValue('sign.enable')) {
             return $this->gConfig->getBoolean('sign.enable');
         }
         return false;
