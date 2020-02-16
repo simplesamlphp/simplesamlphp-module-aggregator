@@ -1,0 +1,24 @@
+{% set pagetitle = '{aggregator:aggregator:aggregator_header}'|trans %}
+{% extends "base.twig" %}
+
+{% block content %}
+    <h1>{{ header }}</h1>
+
+    {% if sources is defined %}
+    {% if sources is empty %}
+    <p>{{ '{aggregator:aggregator:no_aggregators}'|trans }}</p>
+    {% else %}
+    <ul>
+        {% for index, source in sources %}
+        {% set encId = source|escape('url') %}
+        {% set encName = source|escape('html') %}
+        <li>
+            <a href="?id={{ encId }}">{{ encName }}</a>
+            <a href="?id={{ encId }}&amp;mimetype=text/plain">[{{ '{aggregator:aggregator:text}'|trans }}]</a>
+            <a href="?id={{ encId }}&amp;mimetype=application/xml">[xml]</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endif %}
+{% endblock %}

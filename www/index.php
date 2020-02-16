@@ -1,27 +1,38 @@
 <?php
 
-$config = \SimpleSAML\Configuration::getInstance();
-$gConfig = \SimpleSAML\Configuration::getConfig('module_aggregator.php');
+use SimpleSAML\Configuration;
+use SimpleSAML\Error;
+use SimpleSAML\Module\aggregator\Aggregator;
+use SimpleSAML\Utils;
+use SimpleSAML\XHTML\Template;
+
+$config = Configuration::getInstance();
+$gConfig = Configuration::getConfig('module_aggregator.php');
 
 
 // Get list of aggregators
 $aggregators = $gConfig->getConfigItem('aggregators');
 
+if ($aggregators === null) {
+    throw new Error\CriticalConfigurationError('No aggregators found in module configuration.');
+}
+
 // If aggregator ID is not provided, show the list of available aggregates
 if (!array_key_exists('id', $_GET)) {
-    $t = new \SimpleSAML\XHTML\Template($config, 'aggregator:list.php');
+    $t = new Template($config, 'aggregator:list.twig');
     $t->data['sources'] = $aggregators->getOptions();
-    $t->show();
+    $t->send();
     exit;
 }
 $id = $_GET['id'];
 if (!in_array($id, $aggregators->getOptions())) {
-    throw new \SimpleSAML\Error\NotFound('No aggregator with id ' . var_export($id, true) . ' found.');
+    throw new Error\NotFound('No aggregator with id ' . var_export($id, true) . ' found.');
 }
 
+/** @psalm-var \SimpleSAML\Configuration $aConfig  We've checked it exists right above */
 $aConfig = $aggregators->getConfigItem($id);
 
-$aggregator = new \SimpleSAML\Module\aggregator\Aggregator($gConfig, $aConfig, $id);
+$aggregator = new Aggregator($gConfig, $aConfig, $id);
 
 if (isset($_REQUEST['set'])) {
     $aggregator->limitSets($_REQUEST['set']);
@@ -44,7 +55,7 @@ if (isset($_GET['mimetype']) && in_array($_GET['mimetype'], $allowedmimetypes)) 
 }
 
 if ($mimetype === 'text/plain') {
-    \SimpleSAML\Utils\XML::formatDOMElement($xml);
+    Utils\XML::formatDOMElement($xml);
 }
 
 $metadata = '<?xml version="1.0"?>' . "\n" . $xml->ownerDocument->saveXML($xml);

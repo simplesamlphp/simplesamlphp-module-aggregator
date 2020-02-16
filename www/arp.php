@@ -1,27 +1,41 @@
 <?php
 
-$config = \SimpleSAML\Configuration::getInstance();
-$gConfig = \SimpleSAML\Configuration::getConfig('module_aggregator.php');
+use DOMDocument;
+use SimpleSAML\Configuration;
+use SimpleSAML\Error;
+use SimpleSAML\Module\aggregator\Aggregator;
+use SimpleSAML\Module\aggregator\Arp;
+use SimpleSAML\Utils;
+use SimpleSAML\XHTML\Template;
+use SimpleSAML\XML;
+
+$config = Configuration::getInstance();
+$gConfig = Configuration::getConfig('module_aggregator.php');
 
 
 // Get list of aggregators
 $aggregators = $gConfig->getConfigItem('aggregators');
 
+if ($aggregators === null) {
+    throw new Error\CriticalConfigurationError('No aggregators found in module configuration.');
+}
+
 // If aggregator ID is not provided, show the list of available aggregates
 if (!array_key_exists('id', $_GET)) {
-    $t = new \SimpleSAML\XHTML\Template($config, 'aggregator:list.php');
+    $t = new Template($config, 'aggregator:list.twig');
     $t->data['sources'] = $aggregators->getOptions();
-    $t->show();
+    $t->send();
     exit;
 }
 $id = $_GET['id'];
 if (!in_array($id, $aggregators->getOptions())) {
-    throw new \SimpleSAML\Error\NotFound('No aggregator with id ' . var_export($id, true) . ' found.');
+    throw new Error\NotFound('No aggregator with id ' . var_export($id, true) . ' found.');
 }
 
+/** @psalm-var \SimpleSAML\Configuration $aConfig  We've checked it exists right above */
 $aConfig = $aggregators->getConfigItem($id);
 
-$aggregator = new \SimpleSAML\Module\aggregator\Aggregator($gConfig, $aConfig, $id);
+$aggregator = new Aggregator($gConfig, $aConfig, $id);
 
 if (isset($_REQUEST['set'])) {
     $aggregator->limitSets($_REQUEST['set']);
@@ -33,10 +47,11 @@ if (isset($_REQUEST['exclude'])) {
 
 $md = $aggregator->getSources();
 
-$attributemap = null;
-if (isset($_REQUEST['attributemap'])) {
-    $attributemap = $_REQUEST['attributemap'];
+if (!array_key_exists('attributemap', $_REQUEST)) {
+    throw new Error\BadRequest('Missing attributemap in request');
 }
+$attributemap = $_REQUEST['attributemap'];
+
 $prefix = '';
 if (isset($_REQUEST['prefix'])) {
     $prefix = $_REQUEST['prefix'];
@@ -52,23 +67,24 @@ if (isset($_REQUEST['suffix'])) {
  * use Windows-style paths.
  */
 if (strpos($attributemap, '\\') !== false) {
-    throw new SimpleSAML\Error\BadRequest('Requested URL contained a backslash.');
+    throw new Error\BadRequest('Requested URL contained a backslash.');
 } elseif (strpos($attributemap, './') !== false) {
-    throw new \SimpleSAML\Error\BadRequest('Requested URL contained \'./\'.');
+    throw new Error\BadRequest('Requested URL contained \'./\'.');
 }
 
-$arp = new \SimpleSAML\Module\aggregator\Arp($md, $attributemap, $prefix, $suffix);
+$arp = new Arp($md, $attributemap, $prefix, $suffix);
 
 $arpxml = $arp->getXML();
 
-$xml = new \DOMDocument();
+$xml = new DOMDocument();
 $xml->loadXML($arpxml);
 
-$firstelement = $xml->firstChild;
+$firstelement = $xml->documentElement;
 
 if ($aggregator->shouldSign()) {
     $signinfo = $aggregator->getSigningInfo();
-    $signer = new \SimpleSAML\XML\Signer($signinfo);
+    $signer = new XML\Signer($signinfo);
+    /** @psalm-suppress ArgumentTypeCoercion */
     $signer->sign($firstelement, $firstelement, $firstelement->firstChild);
 }
 
@@ -84,7 +100,7 @@ if (isset($_GET['mimetype']) && in_array($_GET['mimetype'], $allowedmimetypes)) 
 }
 
 if ($mimetype === 'text/plain') {
-    \SimpleSAML\Utils\XML::formatDOMElement($xml->documentElement);
+    Utils\XML::formatDOMElement($xml->documentElement);
 }
 
 header('Content-Type: ' . $mimetype);

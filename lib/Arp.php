@@ -2,6 +2,8 @@
 
 namespace SimpleSAML\Module\aggregator;
 
+use SimpleSAML\Configuration;
+
 /*
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
  * @package simpleSAMLphp
@@ -25,11 +27,11 @@ class Arp
      * Constructor
      *
      * @param array $metadata
-     * @param array $attributemap
+     * @param string|null $attributemap
      * @param string $prefix
      * @param string $suffix
      */
-    public function __construct($metadata, $attributemap, $prefix, $suffix)
+    public function __construct(array $metadata, ?string $attributemap, string $prefix, string $suffix)
     {
         $this->metadata = $metadata;
 
@@ -43,16 +45,17 @@ class Arp
 
 
     /**
-     * @param array $attributemap
+     * @param string $attributemap
      * @return void
      */
-    private function loadAttributeMap($attributemap)
+    private function loadAttributeMap(string $attributemap): void
     {
-        $config = \SimpleSAML\Configuration::getInstance();
-        include($config->getPathValue('attributemap', 'attributemap/') . $attributemap . '.php');
+        $config = Configuration::getInstance();
+        /** @psalm-var string $path */
+        $path = $config->getPathValue('attributemap', 'attributemap/');
+        include($path . $attributemap . '.php');
+        /** @psalm-var array $attributemap */
         $this->attributes = $attributemap;
-
-        #print_r($attributemap); exit;
     }
 
 
@@ -60,7 +63,7 @@ class Arp
      * @param string $name
      * @return string
      */
-    private function surround($name)
+    private function surround(string $name): string
     {
         $ret = '';
         if (!empty($this->prefix)) {
@@ -78,7 +81,7 @@ class Arp
      * @param string $name
      * @return string
      */
-    private function getAttributeID($name)
+    private function getAttributeID(string $name): string
     {
         if (empty($this->attributes)) {
             return $this->surround($name);
@@ -93,7 +96,7 @@ class Arp
     /**
      * @return string
      */
-    public function getXML()
+    public function getXML(): string
     {
         $xml = <<<EOT
 <?xml version="1.0" encoding="UTF-8"?>
@@ -122,7 +125,7 @@ EOT;
      * @param array $entry
      * @return string
      */
-    private function getEntryXML($entry)
+    private function getEntryXML(array $entry): string
     {
         $entityid = $entry['entityid'];
         return '<AttributeFilterPolicy id="' .
@@ -135,7 +138,7 @@ EOT;
      * @param array $entry
      * @return string
      */
-    private function getEntryXMLcontent($entry)
+    private function getEntryXMLcontent(array $entry): string
     {
         $ids = [];
         if (!array_key_exists('attributes', $entry)) {

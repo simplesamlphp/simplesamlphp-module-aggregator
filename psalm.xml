@@ -31,6 +31,12 @@
         <UnusedClass errorLevel="info" />
         <PossiblyUnusedMethod errorLevel="info" />
 
+        <!-- Ignore MissingFile -->
+        <MissingFile>
+            <errorLevel type="suppress">
+                <file name="bin/get.php" />
+            </errorLevel>
+        </MissingFile>
 
         <!-- Ignore UnresolvableInclude -->
         <UnresolvableInclude>
@@ -39,12 +45,5 @@
                 <file name="tests/bootstrap.php" />
             </errorLevel>
         </UnresolvableInclude>
-
-        <!-- Ignore MissingFile -->
-        <MissingFile>
-            <errorLevel type="suppress">
-                <directory name="bin" />
-            </errorLevel>
-        </MissingFile>
     </issueHandlers>
 </psalm>

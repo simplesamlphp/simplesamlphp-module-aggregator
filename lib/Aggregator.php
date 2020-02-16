@@ -2,6 +2,20 @@
 
 namespace SimpleSAML\Module\aggregator;
 
+use DOMElement;
+use DOMDocument;
+use Exception;
+use SAML2\XML\md\EntityDescriptor;
+use SAML2\XML\md\EntitiesDescriptor;
+use SAML2\XML\mdrpi\RegistrationInfo;
+use SAML2\Utils as SAML2_Utils;
+use SimpleSAML\Configuration;
+use SimpleSAML\Logger;
+use SimpleSAML\Metadata\MetaDataStorageSource;
+use SimpleSAML\Metadata\SAMLBuilder;
+use SimpleSAML\Utils;
+use SimpleSAML\XML;
+
 /**
  * Aggregates metadata for multiple sources into one signed file
  *
@@ -32,7 +46,7 @@ class Aggregator
      * @param \SimpleSAML\Configuration $aConfig
      * @param string $id
      */
-    public function __construct($gConfig, $aConfig, $id)
+    public function __construct(Configuration $gConfig, Configuration $aConfig, string $id)
     {
         $this->gConfig = $gConfig;
         $this->aConfig = $aConfig;
@@ -41,8 +55,6 @@ class Aggregator
         $this->sets = [
             'saml20-idp-remote',
             'saml20-sp-remote',
-            'shib13-idp-remote',
-            'shib13-sp-remote',
             'attributeauthority-remote'
         ];
 
@@ -53,10 +65,10 @@ class Aggregator
 
 
     /**
-     * @param string $set
+     * @param array|string $set
      * @return void
      */
-    public function limitSets($set)
+    public function limitSets($set): void
     {
         if (is_array($set)) {
             $this->sets = array_intersect($this->sets, $set);
@@ -67,17 +79,14 @@ class Aggregator
             case 'saml2':
                 $this->sets = array_intersect($this->sets, ['saml20-idp-remote', 'saml20-sp-remote']);
                 break;
-            case 'shib13':
-                $this->sets = array_intersect($this->sets, ['shib13-idp-remote', 'shib13-sp-remote']);
-                break;
             case 'idp':
                 $this->sets = array_intersect(
                     $this->sets,
-                    ['saml20-idp-remote', 'shib13-idp-remote', 'attributeauthority-remote']
+                    ['saml20-idp-remote', 'attributeauthority-remote']
                 );
                 break;
             case 'sp':
-                $this->sets = array_intersect($this->sets, ['saml20-sp-remote', 'shib13-sp-remote']);
+                $this->sets = array_intersect($this->sets, ['saml20-sp-remote']);
                 break;
             default:
                 $this->sets = array_intersect($this->sets, [$set]);
@@ -92,24 +101,25 @@ class Aggregator
      * @param string|array $exclude  May be string or array identifying a tag to exclude.
      * @return void
      */
-    public function exclude($exclude)
+    public function exclude($exclude): void
     {
-        $this->excludeTags = array_merge($this->excludeTags, \SimpleSAML\Utils\Arrays::arrayize($exclude));
+        $this->excludeTags = array_merge($this->excludeTags, Utils\Arrays::arrayize($exclude));
     }
 
 
     /**
      * Returns a list of entities with metadata
      * @return array
+     * @throws \Exception
      */
-    public function getSources()
+    public function getSources(): array
     {
         $sourcesDef = $this->aConfig->getArray('sources');
 
         try {
-            $sources = \SimpleSAML\Metadata\MetaDataStorageSource::parseSources($sourcesDef);
-        } catch (\Exception $e) {
-            throw new \Exception(
+            $sources = MetaDataStorageSource::parseSources($sourcesDef);
+        } catch (Exception $e) {
+            throw new Exception(
                 'Invalid aggregator source configuration for aggregator '
                 . var_export($this->id, true) . ': ' . $e->getMessage()
             );
@@ -128,7 +138,7 @@ class Aggregator
                         isset($metadata['tags']) &&
                         (count(array_intersect($this->excludeTags, $metadata['tags'])) > 0)
                     ) {
-                        \SimpleSAML\Logger::debug(
+                        Logger::debug(
                             'Excluding entity ID [' . $entityId
                             . '] becuase it is tagged with one of [' . var_export($this->excludeTags, true) . ']'
                         );
@@ -157,7 +167,7 @@ class Aggregator
     /**
      * @return int|null
      */
-    public function getMaxDuration()
+    public function getMaxDuration(): ?int
     {
         if ($this->aConfig->hasValue('maxDuration')) {
             return $this->aConfig->getInteger('maxDuration');
@@ -171,7 +181,7 @@ class Aggregator
     /**
      * @return bool
      */
-    public function getReconstruct()
+    public function getReconstruct(): bool
     {
         if ($this->aConfig->hasValue('reconstruct')) {
             return $this->aConfig->getBoolean('reconstruct');
@@ -185,7 +195,7 @@ class Aggregator
     /**
      * @return bool
      */
-    public function shouldSign()
+    public function shouldSign(): bool
     {
         if ($this->aConfig->hasValue('sign.enable')) {
             return $this->aConfig->getBoolean('sign.enable');
@@ -199,7 +209,7 @@ class Aggregator
     /**
      * @return array
      */
-    public function getSigningInfo()
+    public function getSigningInfo(): array
     {
         if ($this->aConfig->hasValue('sign.privatekey')) {
             return [
@@ -222,34 +232,34 @@ class Aggregator
     /**
      * @return \DOMElement
      */
-    public function getMetadataDocument()
+    public function getMetadataDocument(): DOMElement
     {
         // Get metadata entries
         $entities = $this->getSources();
         $maxDuration = $this->getMaxDuration();
         $reconstruct = $this->getReconstruct();
 
-        $entitiesDescriptor = new \SAML2\XML\md\EntitiesDescriptor();
-        $entitiesDescriptor->Name = $this->id;
-        $entitiesDescriptor->validUntil = time() + $maxDuration;
+        $entitiesDescriptor = new EntitiesDescriptor();
+        $entitiesDescriptor->setName($this->id);
+        $entitiesDescriptor->setValidUntil(time() + intval($maxDuration));
 
         // add RegistrationInfo extension if enabled
         if ($this->gConfig->hasValue('RegistrationInfo')) {
-            $ri = new \SAML2\XML\mdrpi\RegistrationInfo();
+            $ri = new RegistrationInfo();
             foreach ($this->gConfig->getArray('RegistrationInfo') as $riName => $riValues) {
                 switch ($riName) {
                     case 'authority':
-                        $ri->registrationAuthority = $riValues;
+                        $ri->setRegistrationAuthority($riValues);
                         break;
                     case 'instant':
-                        $ri->registrationInstant = \SAML2\Utils::xsDateTimeToTimestamp($riValues);
+                        $ri->setRegistrationInstant(SAML2_Utils::xsDateTimeToTimestamp($riValues));
                         break;
                     case 'policies':
-                        $ri->RegistrationPolicy = $riValues;
+                        $ri->setRegistrationPolicy($riValues);
                         break;
                 }
             }
-            $entitiesDescriptor->Extensions[] = $ri;
+            $entitiesDescriptor->setExtensions([$ri]);
         }
 
         /* Build EntityDescriptor elements for them. */
@@ -278,19 +288,21 @@ class Aggregator
 
             if (is_string($entityDescriptor) && !$reconstruct) {
                 /* All metadata sets for the entity contain the same entity descriptor. Use that one. */
-                $tmp = new \DOMDocument();
+                $tmp = new DOMDocument();
                 $tmp->loadXML(base64_decode($entityDescriptor));
-                $entitiesDescriptor->children[] = new \SAML2\XML\md\EntityDescriptor($tmp->documentElement);
+                $entitiesDescriptor->setChildren([new EntityDescriptor($tmp->documentElement)]);
             } else {
-                $tmp = new \SimpleSAML\Metadata\SAMLBuilder($entity, $maxDuration, $maxDuration);
+                $tmp = new SAMLBuilder($entity, $maxDuration, $maxDuration);
 
                 $orgmeta = null;
                 foreach ($sets as $set => $metadata) {
                     $tmp->addMetadata($set, $metadata);
                     $orgmeta = $metadata;
                 }
-                $tmp->addOrganizationInfo($orgmeta);
-                $entitiesDescriptor->children[] = new \SAML2\XML\md\EntityDescriptor($tmp->getEntityDescriptor());
+                if ($orgmeta !== null) {
+                    $tmp->addOrganizationInfo($orgmeta);
+                }
+                $entitiesDescriptor->setChildren([new EntityDescriptor($tmp->getEntityDescriptor())]);
             }
         }
 
@@ -298,8 +310,8 @@ class Aggregator
 
         // sign the metadata if enabled
         if ($this->shouldSign()) {
-            $signer = new \SimpleSAML\XML\Signer($this->getSigningInfo());
-            $signer->sign($document, $document, $document->firstChild);
+            $signer = new XML\Signer($this->getSigningInfo());
+            $signer->sign($document, $document, $document->ownerDocument->documentElement);
         }
 
         return $document;

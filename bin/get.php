@@ -14,7 +14,7 @@ $aggregators = $gConfig->getConfigItem('aggregators');
 
 $aConfig = $aggregators->getConfigItem($id, null);
 if ($aConfig === null) {
-    fwrite(STDERR, 'No aggregator with id ' . var_export($id, null) . " found.\n");
+    fwrite(STDERR, 'No aggregator with id ' . strval(var_export($id, null)) . " found.\n");
     exit(1);
 }
 
